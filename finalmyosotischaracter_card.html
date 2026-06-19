@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>《终焉勿忘我》公开企划角色卡生成器</title>
+  <style>
+    :root{
+      --bg:#10131a;
+      --panel:#171c26;
+      --panel-2:#1f2633;
+      --ink:#e8edf7;
+      --muted:#9da8bc;
+      --line:#2e3748;
+      --accent:#7db7ff;
+      --accent-2:#b6d7ff;
+      --gold:#f0cc74;
+      --danger:#ff8888;
+      --ok:#9de0b1;
+      --shadow: 0 18px 50px rgba(0,0,0,.32);
+      --radius:18px;
+      --radius-sm:12px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:var(--font);
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(125,183,255,.17), transparent 30%),
+        radial-gradient(circle at 80% 0%, rgba(240,204,116,.12), transparent 26%),
+        linear-gradient(180deg,#0d1017,#11151d 44%,#0b0e14);
+    }
+    button,input,select,textarea{font:inherit}
+    a{color:var(--accent)}
+    .app{max-width:1440px;margin:0 auto;padding:24px}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(135deg,rgba(31,38,51,.88),rgba(23,28,38,.88));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px;
+      margin-bottom:20px;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;right:-80px;top:-80px;width:240px;height:240px;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(125,183,255,.22),transparent 68%);
+      pointer-events:none;
+    }
+    .hero h1{margin:0 0 8px;font-size:30px;letter-spacing:.04em}
+    .hero p{margin:0;color:var(--muted);line-height:1.75;max-width:960px}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+    .world-intro{
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.09);
+      background:
+        radial-gradient(circle at 18% 14%, rgba(125,183,255,.18), transparent 34%),
+        radial-gradient(circle at 82% 6%, rgba(240,204,116,.13), transparent 28%),
+        linear-gradient(135deg,rgba(23,28,38,.94),rgba(16,23,34,.96));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:34px 36px;
+      margin-bottom:20px;
+    }
+    .world-intro::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),
+        linear-gradient(180deg,rgba(255,255,255,.035) 1px,transparent 1px);
+      background-size:46px 46px;
+      opacity:.14;
+      pointer-events:none;
+    }
+    .world-intro::after{
+      content:"";
+      position:absolute;
+      left:-80px;
+      bottom:-90px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(125,183,255,.16),transparent 70%);
+      pointer-events:none;
+    }
+    .world-copy{
+      position:relative;
+      max-width:980px;
+      margin:0 auto;
+      color:var(--ink);
+      font-size:16px;
+      line-height:2;
+      letter-spacing:.02em;
+    }
+    .world-copy p{margin:0 0 14px}
+    .world-copy p:last-child{margin-bottom:0}
+    .world-copy strong{color:var(--gold);font-weight:800}
+    .world-copy .race-line{padding-left:1em;color:var(--accent-2)}
+    .layout{display:grid;grid-template-columns: minmax(360px, 1fr) 520px; gap:20px;align-items:start}
+    .panel{
+      background:rgba(23,28,38,.93);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .form-panel{padding:18px}
+    .preview-panel{position:sticky;top:16px;padding:18px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .tab-btn{
+      border:1px solid var(--line);
+      background:var(--panel-2);
+      color:var(--muted);
+      padding:9px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      transition:.18s;
+    }
+    .tab-btn.active{color:#06111f;background:var(--accent);border-color:var(--accent)}
+    .tab{display:none}.tab.active{display:block}
+    .section-title{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin:6px 0 14px;
+      border-bottom:1px solid var(--line);
+      padding-bottom:10px;
+    }
+    .section-title h2{font-size:18px;margin:0;letter-spacing:.04em}
+    .hint{color:var(--muted);font-size:13px;line-height:1.6}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    label{font-size:13px;color:var(--accent-2);letter-spacing:.02em}
+    input,select,textarea{
+      width:100%;
+      color:var(--ink);
+      background:#101722;
+      border:1px solid var(--line);
+      border-radius:var(--radius-sm);
+      padding:10px 11px;
+      outline:none;
+      transition:.16s;
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(125,183,255,.13)}
+    textarea{min-height:92px;resize:vertical;line-height:1.65}
+    .small{font-size:12px;color:var(--muted)}
+    .check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+    .pill-check{position:relative}
+    .pill-check input{position:absolute;opacity:0;pointer-events:none}
+    .pill-check span{
+      display:block;text-align:center;padding:9px 8px;border-radius:999px;
+      background:#101722;border:1px solid var(--line);color:var(--muted);cursor:pointer;font-size:13px;
+      transition:.16s;
+    }
+    .pill-check input:checked + span{background:rgba(125,183,255,.18);border-color:var(--accent);color:var(--ink)}
+    .guide-box{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 8px;
+    }
+    .guide-card{
+      background:linear-gradient(180deg,rgba(31,38,51,.88),rgba(16,23,34,.88));
+      border:1px solid var(--line);
+      border-radius:var(--radius-sm);
+      padding:12px;
+      min-height:118px;
+    }
+    .guide-card b{display:block;color:var(--gold);margin-bottom:6px}
+    .guide-card p{margin:0;color:var(--muted);line-height:1.65;font-size:13px}
+    .btn{
+      border:1px solid var(--line);
+      background:var(--panel-2);
+      color:var(--ink);
+      padding:10px 13px;
+      border-radius:var(--radius-sm);
+      cursor:pointer;
+      transition:.18s;
+      display:inline-flex;align-items:center;gap:6px;
+      text-decoration:none;
+    }
+    .btn:hover{transform:translateY(-1px);border-color:var(--accent)}
+    .btn.primary{background:linear-gradient(180deg,#8fc4ff,#65aaff);color:#08111d;border-color:#84bdff;font-weight:700}
+    .btn.gold{background:linear-gradient(180deg,#f4d890,#dfb94d);color:#211504;border-color:#f0cc74;font-weight:700}
+    .btn.danger{border-color:rgba(255,136,136,.45);color:#ffd1d1;background:rgba(255,136,136,.08)}
+    .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .card{
+      background:
+        linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015)),
+        #111722;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:20px;
+      overflow:hidden;
+    }
+    .card-head{
+      padding:20px;
+      background:
+        radial-gradient(circle at 10% 20%,rgba(125,183,255,.22),transparent 40%),
+        linear-gradient(135deg,rgba(125,183,255,.13),rgba(240,204,116,.08));
+      border-bottom:1px solid var(--line);
+    }
+    .name-line{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .card h2{margin:0;font-size:24px;letter-spacing:.04em}
+    .subtitle{color:var(--muted);margin-top:6px;line-height:1.5}
+    .badge{display:inline-flex;align-items:center;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--accent-2);border-radius:999px;padding:5px 9px;font-size:12px;margin:4px 4px 0 0}
+    .card-body{padding:16px 18px 18px}
+    .kv{display:grid;grid-template-columns:105px 1fr;gap:8px 10px;margin:0 0 12px;font-size:14px}
+    .kv dt{color:var(--accent-2)}
+    .kv dd{margin:0;color:var(--ink);line-height:1.55;word-break:break-word}
+    .story-block{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+    .story-block h3{font-size:14px;margin:0 0 6px;color:var(--gold)}
+    .story-block p{margin:0;color:var(--muted);line-height:1.7;white-space:pre-wrap}
+    .drafts{display:grid;gap:8px;margin-top:8px}
+    .draft-item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#101722;border:1px solid var(--line);border-radius:12px;padding:9px}
+    .draft-item span{font-size:13px;color:var(--muted)}
+    .draft-item strong{font-size:14px;color:var(--ink)}
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:50;align-items:center;justify-content:center;padding:20px}
+    .modal-backdrop.active{display:flex}
+    .modal{max-width:760px;width:100%;max-height:82vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+    .modal pre{white-space:pre-wrap;background:#0c1119;border:1px solid var(--line);border-radius:12px;padding:14px;color:#dce8ff;line-height:1.6}
+    .toast{position:fixed;right:18px;bottom:18px;background:#0e1621;border:1px solid var(--accent);color:var(--ink);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);display:none;z-index:70}
+    .toast.show{display:block;animation:fade .25s ease-out}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    @media (max-width:1050px){.layout{grid-template-columns:1fr}.preview-panel{position:relative;top:0}.guide-box{grid-template-columns:1fr}}
+    @media (max-width:720px){.app{padding:14px}.hero{padding:20px}.grid,.grid-3{grid-template-columns:1fr}.check-grid{grid-template-columns:repeat(2,1fr)}.kv{grid-template-columns:86px 1fr}.hero h1{font-size:24px}}
+    @media print{
+      body{background:#fff;color:#111}.hero,.form-panel,.top-actions,.btn-row,.tabs,.guide-box{display:none!important}.app{padding:0}.layout{display:block}.preview-panel{box-shadow:none;border:none;padding:0}.card{border:1px solid #aaa;background:#fff;color:#111}.card-head{background:#eef4ff}.subtitle,.story-block p,.kv dd{color:#222}.kv dt,.story-block h3{color:#333}.badge{color:#111;border-color:#aaa;background:#f6f6f6}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <section class="world-intro">
+      <div class="world-copy">
+        <p>在众神沉眠、群星低语的尽头，有一片名为<strong>伊达利尔</strong>的土地。</p>
+        <p>这里，魔法与机械并存，诸族共居于风雷火冰的律动之中。世界树的根系深埋大地，枝叶贯穿星穹，维系着万物的魔力平衡。神明曾降临此地，创造族群、洒下恩泽，而今他们早已隐去身影，留下一个支离破碎、却仍顽强生长的世界。</p>
+        <p>伊达利尔是诸多种族的故乡——</p>
+        <p class="race-line">人类在刀锋与火焰中求生，是最脆弱也最顽强的种族；</p>
+        <p class="race-line">矮人锻造万物，以锤音与烈酒咏唱山魂的诗篇；</p>
+        <p class="race-line">精灵族隐居古林，守护星辰与自然的律法；</p>
+        <p class="race-line">恶魔在黑夜中低语，与深渊签下契约；</p>
+        <p class="race-line">龙——天命的守望者，沉睡在传说的边界之中；</p>
+        <p class="race-line">半精灵、兽人……他们皆在寻找一个属于自己的位置。</p>
+        <p>漫长的历史中，旧神的陨落、混沌灾厄的肆虐，将伊达利尔推入永不停息的命运漩涡。</p>
+        <p>那些被诅咒者、赎罪者与抗争者，曾以血与火铭刻历史，如今，他们的后裔仍在寻求拯救的可能。</p>
+        <p>在这里，魔法师与机械师并肩作战，旧世界与新世界所交融。</p>
+        <p>而你，将从一个微小的命运起点，亲历这一切。</p>
+        <p>欢迎踏入伊达利尔大陆，一个被混沌与希望共生缠绕的幻想世界。</p>
+        <p>在这里，每一个选择都可能引发时代的回响，每一段旅途，都将成为不朽史诗的一部分。</p>
+      </div>
+    </section>
+
+    <header class="hero">
+      <h1>《终焉勿忘我》公开企划角色卡生成器</h1>
+      <p>填写角色资料，右侧会实时生成角色卡预览。数据默认保存在你的浏览器本地；也可以导出 JSON 备份，或导出 Markdown 交给企划方审核。此版本为纯前端小程序，不会上传任何信息。</p>
+      <div class="top-actions">
+        <button class="btn primary" id="saveDraftBtn">保存草稿</button>
+        <button class="btn" id="exportJsonBtn">导出 JSON</button>
+        <button class="btn" id="importJsonBtn">导入 JSON</button>
+        <button class="btn gold" id="showMdBtn">生成 Markdown</button>
+        <button class="btn" id="printBtn">打印 / 保存为 PDF</button>
+        <button class="btn danger" id="resetBtn">清空表单</button>
+        <input type="file" id="fileInput" accept="application/json,.json" hidden>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel form-panel">
+        <nav class="tabs" aria-label="角色卡填写页签">
+          <button class="tab-btn active" data-tab="basic">基础资料</button>
+          <button class="tab-btn" data-tab="setting">世界观设定</button>
+          <button class="tab-btn" data-tab="story">故事资料</button>
+          <button class="tab-btn" data-tab="submit">投稿与草稿</button>
+        </nav>
+
+        <form id="cardForm">
+          <div class="tab active" id="tab-basic">
+            <div class="section-title"><h2>基础资料</h2><span class="hint">先确定“这个人是谁”。</span></div>
+            <div class="grid">
+              <div class="field"><label for="creator">投稿人署名</label><input id="creator" name="creator" placeholder="例：张三 / 你的昵称"></div>
+              <div class="field"><label for="visibility">公开程度</label><select id="visibility" name="visibility"><option>可公开展示</option><option>仅企划组查看</option><option>含剧透，暂不公开</option></select></div>
+            </div>
+            <div class="grid">
+              <div class="field"><label for="name">角色姓名</label><input id="name" name="name" placeholder="例：莱娅·温特"></div>
+              <div class="field"><label for="alias">别名 / 称号</label><input id="alias" name="alias" placeholder="例：“夜莺"></div>
+            </div>
+            <div class="grid-3">
+              <div class="field"><label for="gender">性别</label><select id="gender" name="gender"><option value="">请选择</option><option>女性</option><option>男性</option><option>无性</option><option>双性</option><option>非二元</option><option>其他</option></select></div>
+              <div class="field"><label for="age">年龄</label><input id="age" name="age" placeholder="例：19"></div>
+              <div class="field"><label for="apparentAge">外貌年龄</label><input id="apparentAge" name="apparentAge" placeholder="例：约十七岁"></div>
+            </div>
+            <div class="grid">
+              <div class="field"><label for="race">种族</label><input id="race" name="race" list="raceOptions" placeholder="请选择种族"><datalist id="raceOptions"></datalist></div>
+              <div class="field"><label for="bloodline">混血 / 特殊血统</label><input id="bloodline" name="bloodline" placeholder="例：人类与半精灵混血 / 无"></div>
+            </div>
+            <div class="field"><label for="appearance">外貌特征</label><textarea id="appearance" name="appearance" placeholder="发色、瞳色、身高、服饰、伤疤、饰品、种族特征……"></textarea></div>
+            <div class="grid">
+              <div class="field"><label for="personality">性格关键词</label><input id="personality" name="personality" placeholder="例：寡言、敏锐、怕冷、嘴硬心软"></div>
+              <div class="field"><label for="hobbies">爱好 / 习惯</label><input id="hobbies" name="hobbies" placeholder="例：修齿轮、喝热汤、收集旧硬币"></div>
+            </div>
+            <div class="grid">
+              <div class="field"><label for="fear">厌恶 / 恐惧</label><input id="fear" name="fear" placeholder="例：钟声、雪夜、贵族香水"></div>
+              <div class="field"><label for="item">重要物品</label><input id="item" name="item" placeholder="例：破损怀表 / 旧吊坠 / 随身携带的笔记"></div>
+            </div>
+          </div>
+
+          <div class="tab" id="tab-setting">
+            <div class="section-title"><h2>世界观设定</h2><span class="hint">让你的角色降临于伊达利尔大陆！</span></div>
+            <div class="grid">
+              <div class="field"><label for="country">所属国家 / 地区</label><select id="country" name="country"></select></div>
+              <div class="field"><label for="birthplace">具体出身地</label><input id="birthplace" name="birthplace" placeholder="例：艾斯文迪 / 阿多里斯 / 社稷"></div>
+            </div>
+            <div class="field" id="countryCustomField" style="display:none"><label for="countryCustom">自定义国家 / 地区</label><input id="countryCustom" name="countryCustom"></div>
+            <div class="grid">
+              <div class="field">
+                <label for="origin">出身阶层</label>
+                <select id="origin" name="origin">
+                  <option value="">请选择</option>
+                  <option>贵族</option>
+                  <option>平民</option>
+                  <option>边境人</option>
+                  <option>流民</option>
+                  <option>孤儿</option>
+                  <option>宗教性家庭</option>
+                  <option>军人家庭</option>
+                  <option>商人家庭</option>
+                  <option>工匠家庭</option>
+                  <option>矿工家庭</option>
+                  <option>实验体</option>
+                  <option>未知</option>
+                  <option>其他 / 自定义</option>
+                </select>
+              </div>
+              <div class="field"><label for="currentIdentity">当前身份</label><input id="currentIdentity" name="currentIdentity" placeholder="例：机械师学徒 / 曼陀罗十字会记录员 / 逃亡的罪人"></div>
+            </div>
+            <div class="field" id="originCustomField" style="display:none"><label for="originCustom">自定义出身阶层</label><input id="originCustom" name="originCustom"></div>
+            <div class="grid">
+              <div class="field"><label for="job">职业</label><select id="job" name="job"></select></div>
+              <div class="field"><label for="magicLevel">魔力等级</label><select id="magicLevel" name="magicLevel"></select></div>
+            </div>
+
+            <label>魔法属性 / 特殊适配</label>
+            <div class="check-grid" id="elementChecks"></div>
+
+            <div class="grid">
+              <div class="field"><label for="weapon">武器类型</label><select id="weapon" name="weapon"></select></div>
+              <div class="field"><label for="weaponCustom">武器补充</label><input id="weaponCustom" name="weaponCustom" placeholder="例：可拆成双刃的旧式机关剑"></div>
+            </div>
+            <div class="field"><label for="battleStyle">战斗方式</label><textarea id="battleStyle" name="battleStyle" placeholder="角色如何战斗？依赖魔法、武器、药剂、机关、阵地、速度，还是谈判？"></textarea></div>
+
+            <div class="guide-box" id="guideBox"></div>
+          </div>
+
+          <div class="tab" id="tab-story">
+            <div class="section-title"><h2>故事资料</h2><span class="hint">不要只写“很强”，补充更多缘由和背景故事。</span></div>
+            <div class="field"><label for="past">角色过去</label><textarea id="past" name="past" placeholder="出生、家庭、重大事故、创伤、教育、逃亡、被收养、战争经历……"></textarea></div>
+            <div class="field"><label for="goal">现在目标</label><textarea id="goal" name="goal" placeholder="角色此刻最想得到什么？自由、复仇、治病、找人、证明自己、离开国家？"></textarea></div>
+            <div class="field"><label for="secret">角色秘密</label><textarea id="secret" name="secret" placeholder="可填写公开版秘密或仅企划组可见的核心秘密。"></textarea></div>
+            <div class="field"><label for="stateRelation">与国家制度的关系</label><textarea id="stateRelation" name="stateRelation" placeholder="他是制度受益者、受害者、维护者、逃离者，还是旁观者？"></textarea></div>
+
+            <label>与世界观核心设定的关联</label>
+            <div class="check-grid" id="worldLinks"></div>
+
+            <div class="field"><label for="relationship">可填写的人际关系</label><textarea id="relationship" name="relationship" placeholder="亲人、导师、仇人、同伴、雇主、被角色亏欠的人……"></textarea></div>
+          </div>
+
+          <div class="tab" id="tab-submit">
+            <div class="section-title"><h2>投稿与草稿</h2><span class="hint">控制角色可被使用的范围。</span></div>
+            <label>可接受剧情方向</label>
+            <div class="check-grid" id="plotAccepts"></div>
+            <div class="field"><label for="plotReject">不接受剧情方向</label><textarea id="plotReject" name="plotReject" placeholder="例：不接受死亡 / 不接受恋爱线 / 不接受被写成反派"></textarea></div>
+            <div class="field"><label for="notes">备注</label><textarea id="notes" name="notes" placeholder="其他希望企划组知道的信息。"></textarea></div>
+            <div class="divider"></div>
+            <div class="btn-row">
+              <button type="button" class="btn primary" id="saveDraftBtn2">保存草稿</button>
+              <button type="button" class="btn" id="exportJsonBtn2">导出 JSON</button>
+              <button type="button" class="btn gold" id="showMdBtn2">生成 Markdown</button>
+            </div>
+            <p class="small">草稿只保存在当前浏览器。换设备、清缓存或隐私模式关闭后，草稿可能消失；重要角色请导出 JSON 备份。</p>
+            <div class="drafts" id="draftList"></div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel preview-panel">
+        <div class="section-title"><h2>角色卡预览</h2><span class="hint">实时生成</span></div>
+        <article class="card" id="previewCard"></article>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="mdModal" role="dialog" aria-modal="true" aria-label="Markdown 预览">
+    <div class="modal">
+      <div class="section-title"><h2>Markdown 角色卡</h2><button class="btn" id="closeMdBtn">关闭</button></div>
+      <div class="btn-row"><button class="btn primary" id="copyMdBtn">复制 Markdown</button><button class="btn" id="downloadMdBtn">下载 .md</button></div>
+      <pre id="mdOutput"></pre>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const DATA = {
+      races: {
+        "人类":"唯一不具备先天性魔素的种族，但数量庞大，适合魔法师、机械师、药师、军人、贵族、边境平民等方向。",
+        "矮人":"亲近大地、矿石与锻造，常见于工坊、矿区、军备制造与工程领域。",
+        "兽人":"分纯兽与半兽姿态，野性强悍。城市居民多维持半兽形态，方便贸易与外交。",
+        "精灵":"古老长寿，魔素高，擅长自然、幻术与古老知识。多数远离战乱，居于精灵谷地。",
+        "半精灵":"人类与精灵血脉交融者，常在两个世界之间寻找归属。适合巡检官、旅人、魔法协会成员。",
+        "恶魔":"重视契约与规则，灵魂归于深渊都城。死亡并非终点，但重生会磨损记忆与灵魂。",
+        "龙":"仅次于神的高位存在。正统龙族建议审核，龙裔、龙族使者或遗骸关联角色更适合公开投稿。",
+        "神灵":"使用阿卡夏神力的一族，不建议直接投稿完整神明，但你有胆子也可以试试。"
+      },
+      countries: {
+        "艾斯文迪 Eswendy":"冰雪帝国艾斯文迪由至高无上的「光之君主」统治，他不仅是军事上的统帅，更是魔法的守护者。王权之下，是五位由各大家族领主组成的议会，他们共同决策帝国的重大事务，确保军事与魔法的平衡发展。",
+        "赫利 Hery":"太阳神的国度，世上最古老的国家。这片被永恒骄阳眷顾的土地，是人类最初的文明火种。当太阳神赫利托纳提乌的七支神箭撕裂混沌，不仅为世界带来光明，更孕育出支撑王国千年的阳晶石文明。赫利既是文明的摇篮，又是抵御黑暗的第一道圣火，也是大陆上流通的货币——赫利币的铸造之地。",
+        "稻荷 Inari":"位于岛屿西面依照山脉走势和寒绯花树共存的街道，稻荷对外重要的外交窗口，旅馆、商店、温泉景观，你都能在这里看见。华美的艺伎弹奏着小调的曲子，美食的香气飘满了大街小巷。在樱吹雪的景色之下，这里就是粉色的幻境。",
+        "社稷":"社稷，昔为礼仪与法度并立之国，如今以“秩序”为国脉、以“丝线”为律法。白织帝统御万线，缝补山河与人心，使此地繁盛如锦。市巷丝帛与香木交织，百业安稳，风调雨顺。最令人称奇的是——社稷之民，从不做噩梦；夜幕降临，梦皆被纺织成柔绵轻纱，无魇无惊。人在此地，宛如行走于被精心织就的云锦之间。古语言：“昼由百业兴国，夜由纺线护魂。”这便是社稷的真实与神秘。",
+        "阿多里斯 Ardois":"位于火山带之上赤焰帝国。火山灰养出肥沃土地，岩浆深处藏着矿脉，黑曜石、圣火、女帝、赤练骑士共同撑起帝国的威严。阿多里斯人相信火能塑造万物，审判万物。炉火庇护家庭，圣火证明王权，战火开辟疆域，灰烬孕育重生。",
+        "瓦苏达 Vasudha":"史书中近乎失落的古老国度，许多禁忌传说的源头。它曾经辉煌，也曾为自己的信仰付出沉重代价。在创世之初，混沌笼罩万物，万线之主以双手塑就了这片丰饶国度。他栽下贯通天地的弥纶之树，其根系组织法则，枝叶孕育文明。然而神明的慈悲终被权能腐蚀——祂陷入疯狂的深渊，将王朝拖入神罚的永夜。",
+        "赫特米尔 Hetmir":"隶属于暮那舍之塔 / Munashe's Tower 的组织：由半精灵组成的部队，维护魔法秩序。持有「沉寂术」可暂时剥夺魔力者施法能力，「沉默术」可使魔法师魔力陷入沉默状态至数个月。「衰弱术」可压制魔法师的魔法能力。",
+        "深渊都城":"恶魔的根源都市。这里不遵循地上王国的伦理，却有极严苛的契约规则。对这里的居民而言，灵魂、交易、重生、代价，全部放在天平上精确计算。深渊是一份严丝合缝的法典……你可以向它索求一切，只要你付得出落笔无悔的代价。",
+        "矮人国":"地下熔炉与锻造文明构成的国度。",
+        "艾瑞格瑞 山谷":"精灵文明的古老谷地，可视作永恒之森深处的自然国度。这里靠近世界树粗壮的分枝，森林、溪流、藤蔓、精灵们共同维系着安静而漫长的生活。精灵擅长自然魔法，也更懂得生态本身的脆弱。"
+      },
+      jobs: {
+        "格斗师":"借助魔力强化身体，修炼斗气，拳脚能带元素效果。常见于武馆或骑士护卫。",
+        "战士":"战士是最纯粹的军旅之职，以钢铁为甲、以纪律为刃。他们不追求奇技，不倚仗幻法，而是凭借千锤百炼的武技与坚毅意志驰骋沙场。",
+        "魔剑士":"魔剑士是最古老、最广为人知的职业之一。剑在他们手中并非单纯的兵器，而是可承载魔力的「魔具」。无论贵族还是平民，只要握住剑柄，就能踏上这条道路。",
+        "魔弓手":"魔弓手是掌握远程杀伤艺术的职业，他们的弓与箭皆为魔具。弓弦能牵引风与星辰，箭矢可附加毒素、烈焰，甚至化作无形的幻光。",
+        "魔药师":"魔药师是以药剂代替魔法的独特职业，他们相信——万物皆可入药。草木、矿石、兽血、乃至月光与星尘，只要经过配比与火候，都能化为神奇的药剂。",
+        "魔法师":"正统魔力者：元素魔法（火、雷、水等）或高阶非自然魔法（时间、空间、精神）。社会地位最高。",
+        "机械师":"融合魔力与机关，能制造魔导傀儡、浮空舰等。少见但危险，被称为“魔导工匠”。",
+        "炼金术士":"炼金术士是探索物质本源与变化规律的学者与实践者。他们相信万物皆可拆解、重组，透过符文、阵式、坩埚与矿物，将自然的法则强行改写。"
+      },
+      magicLevels: {
+  "无魔者": "无法感应或无法使用魔力。通常无法正常施法，可转向机械、药剂、武技、魔导器、阳晶石工具等路线。",
+  "魔力衰退 / 回路受损": "曾经拥有魔力，后因疾病、创伤、诅咒、魔力回路损毁、黑纹病或实验影响而衰退。实际魔阶需另行说明。",
+
+  "Lv.1 阿尔法": "初级魔法师第一阶。能完成最基础的魔力感应与简单术式，通常仍处于学徒阶段。",
+  "Lv.2 贝塔": "初级魔法师第二阶。可较稳定地释放低阶魔法，但战斗续航与术式控制仍有限。",
+  "Lv.3 伽马": "初级魔法师第三阶。已达到部分正规魔法学院或军事学院的最低门槛，可接受系统化训练。",
+
+  "Lv.4 德尔塔": "中级魔法师第一阶。能稳定参与实战，具备较成熟的元素控制能力。",
+  "Lv.5 伊普西龙": "中级魔法师第二阶。可掌握更复杂的术式组合，适合军队、学院、贵族家族或专业魔法机构。",
+  "Lv.6 截塔": "中级魔法师第三阶。中阶顶点，通常已具备独立执行任务或担任小队核心的能力。",
+
+  "Lv.7 艾塔": "高级魔法师第一阶。高阶魔力者，可掌握高难度术式，并在局部战场中产生明显影响。",
+  "Lv.8 西塔": "高级魔法师第二阶。能使用大型术式、复杂结界或国家体系魔法，是各国重要战力。",
+  "Lv.9 约塔": "高级魔法师第三阶。高阶顶点，极为稀有，通常会受到国家、学院、军部或贵族体系重视。",
+
+  "Lv.10 卡帕": "大魔法师。凡人魔法师中的顶级层级，可影响大型战场、结界系统或国家级魔法工程。",
+  "魔导师": "超越 Lv.10 的存在。数量极少，不建议随意开放投稿，建议企划方审核。",
+  "特殊体系": "不按普通魔阶计算，如龙、神、半神、混沌力适配体、关键物品持有者、特殊适配者、特殊个体等。"
+},
+      weapons: ["无固定武器","单手剑","长剑 / 大剑","短刀 / 匕首","长枪 / 薙刀","弓 / 弩","法杖","拳套 / 护腕","药剂 / 毒瓶","机关武器","线 / 针 / 剪","阳晶石魔具","魔导枪","盾牌","生活工具","自定义"],
+      elements: ["无","风","水","火","土","雷","冰"],
+      worldLinks: ["战争 / 反战","瘟疫与灾后生活","魔力阶级与无魔者歧视","贵族血统与继承制度","机械与魔法的共存","种族隔阂与身份认同","信仰、神话与地方传统","流亡、迁徙与故土","边境生活与底层生存","医疗、药剂与救助","国家制度与权力斗争","记忆、梦境与自我寻找","资源开采与文明代价","古代遗迹与旧文明","无关联 / 日常角色"],
+      plotAccepts: ["可做支线角色","可加入临时队伍","可受伤","可死亡","可黑化","可被救赎","可成为反派","可成为NPC商人","可参与战斗","可参与恋爱线","仅背景角色"]
+    };
+
+    const $ = (id)=>document.getElementById(id);
+    const form = $("cardForm");
+    const storageKey = "fm_character_cards_v1";
+
+    function initSelects(){
+      fillDatalist("raceOptions", Object.keys(DATA.races));
+      fillSelect("country", Object.keys(DATA.countries), "请选择国家 / 地区");
+      fillSelect("job", Object.keys(DATA.jobs), "请选择职业");
+      fillSelect("magicLevel", Object.keys(DATA.magicLevels), "请选择魔力等级");
+      fillSelect("weapon", DATA.weapons, "请选择武器类型");
+      makeChecks("elementChecks", DATA.elements, "elements");
+      makeChecks("worldLinks", DATA.worldLinks, "worldLinks");
+      makeChecks("plotAccepts", DATA.plotAccepts, "plotAccepts");
+    }
+    function fillSelect(id, items, first){
+      const s = $(id);
+      s.innerHTML = `<option value="">${first}</option>` + items.map(x=>`<option>${escapeHtml(x)}</option>`).join("");
+    }
+    function fillDatalist(id, items){
+      const d = $(id);
+      d.innerHTML = items.map(x=>`<option value="${escapeHtml(x)}"></option>`).join("");
+    }
+    function makeChecks(id, items, name){
+      $(id).innerHTML = items.map(x=>`
+        <label class="pill-check"><input type="checkbox" name="${name}" value="${escapeHtml(x)}"><span>${escapeHtml(x)}</span></label>
+      `).join("");
+    }
+    function getData(){
+      const fd = new FormData(form);
+      const obj = {};
+      for(const [k,v] of fd.entries()){
+        if(obj[k]){
+          if(Array.isArray(obj[k])) obj[k].push(v); else obj[k] = [obj[k], v];
+        }else obj[k]=v;
+      }
+      obj.elements = fd.getAll("elements");
+      obj.worldLinks = fd.getAll("worldLinks");
+      obj.plotAccepts = fd.getAll("plotAccepts");
+      if(obj.country === "其他 / 待定" && String(obj.countryCustom || "").trim()){
+        obj.country = String(obj.countryCustom).trim();
+      }
+      if(obj.origin === "其他 / 自定义" && String(obj.originCustom || "").trim()){
+        obj.origin = String(obj.originCustom).trim();
+      }
+      obj.updatedAt = new Date().toISOString();
+      return obj;
+    }
+    function setData(data){
+      form.reset();
+      data = {...(data || {})};
+      if(data.country && DATA.countries && !Object.prototype.hasOwnProperty.call(DATA.countries, data.country)){
+        data.countryCustom = data.country;
+        data.country = "其他 / 待定";
+      }
+      const originOptions = ["贵族","平民","边境人","流民","孤儿","宗教性家庭","军人家庭","商人家庭","工匠家庭","矿工家庭","实验体","未知","其他 / 自定义"];
+      if(data.origin && !originOptions.includes(data.origin)){
+        data.originCustom = data.origin;
+        data.origin = "其他 / 自定义";
+      }
+      const checkNames = new Set(["elements","worldLinks","plotAccepts"]);
+      for(const [k,v] of Object.entries(data || {})){
+        if(checkNames.has(k)) continue;
+        if(form.elements[k]) form.elements[k].value = v ?? "";
+      }
+      for(const name of checkNames){
+        const values = Array.isArray(data?.[name]) ? data[name] : [];
+        document.querySelectorAll(`input[name="${name}"]`).forEach(ch=>ch.checked = values.includes(ch.value));
+      }
+      renderAll();
+    }
+    function escapeHtml(s=""){
+      return String(s).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
+    }
+    function clean(s, fallback="未填写"){
+      const v = (s ?? "").toString().trim();
+      return v ? escapeHtml(v) : `<span style="color:var(--muted)">${fallback}</span>`;
+    }
+    function listText(arr){
+      return arr && arr.length ? arr.map(escapeHtml).join("、") : `<span style="color:var(--muted)">未选择</span>`;
+    }
+    function renderPreview(){
+      const d = getData();
+      const title = d.name?.trim() || "未命名角色";
+      const alias = d.alias?.trim() ? `｜${escapeHtml(d.alias)}` : "";
+      const tags = [d.race,d.country,d.job,d.magicLevel].filter(Boolean).map(x=>`<span class="badge">${escapeHtml(x)}</span>`).join("");
+      $("previewCard").innerHTML = `
+        <div class="card-head">
+          <div class="name-line">
+            <div>
+              <h2>${escapeHtml(title)}</h2>
+              <div class="subtitle">${alias ? alias.slice(1) : "公开企划角色卡"}</div>
+            </div>
+            <span class="badge">${escapeHtml(d.visibility || "可公开展示")}</span>
+          </div>
+          <div style="margin-top:10px">${tags || '<span class="badge">未选择设定</span>'}</div>
+        </div>
+        <div class="card-body">
+          <dl class="kv">
+            <dt>投稿人</dt><dd>${clean(d.creator)}</dd>
+            <dt>性别 / 年龄</dt><dd>${clean(d.gender,"未选")} / ${clean(d.age,"未填")} ${d.apparentAge ? `（外貌：${escapeHtml(d.apparentAge)}）` : ""}</dd>
+            <dt>出身</dt><dd>${clean(d.origin,"未选")}｜${clean(d.birthplace,"未填具体地点")}</dd>
+            <dt>当前身份</dt><dd>${clean(d.currentIdentity)}</dd>
+            <dt>血统</dt><dd>${clean(d.bloodline,"无特殊说明")}</dd>
+            <dt>属性</dt><dd>${listText(d.elements)}</dd>
+            <dt>武器</dt><dd>${clean(d.weapon,"未选")} ${d.weaponCustom ? `｜${escapeHtml(d.weaponCustom)}` : ""}</dd>
+            <dt>性格</dt><dd>${clean(d.personality)}</dd>
+            <dt>爱好</dt><dd>${clean(d.hobbies)}</dd>
+            <dt>恐惧</dt><dd>${clean(d.fear)}</dd>
+            <dt>重要物品</dt><dd>${clean(d.item)}</dd>
+          </dl>
+          ${story("外貌特征", d.appearance)}
+          ${story("战斗方式", d.battleStyle)}
+          ${story("角色过去", d.past)}
+          ${story("现在目标", d.goal)}
+          <div class="story-block"><h3>世界观关联</h3><p>${listText(d.worldLinks)}</p></div>
+          ${story("可接受剧情方向", (d.plotAccepts||[]).join("、"))}
+        </div>
+      `;
+    }
+    function story(title, text){
+      if(!String(text||"").trim()) return "";
+      return `<div class="story-block"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div>`;
+    }
+    function renderGuide(){
+      const d = getData();
+      const cards = [
+        [d.race || "种族说明", DATA.races[d.race] || "选择种族后，这里会显示该种族的创作边界与建议。"],
+        [d.country || "国家说明", DATA.countries[d.country] || "选择国家后，这里会显示国家气质、核心矛盾与适合角色方向。"],
+        [d.job || "职业说明", DATA.jobs[d.job] || "选择职业后，这里会显示该职业的功能定位。"],
+        [d.magicLevel || "魔力等级说明", DATA.magicLevels[d.magicLevel] || "选择魔力等级后，这里会显示强度与限制建议。"]
+      ];
+      $("guideBox").innerHTML = cards.map(([t,p])=>`<div class="guide-card"><b>${escapeHtml(t)}</b><p>${escapeHtml(p)}</p></div>`).join("");
+    }
+    function updateCustomFields(){
+      if($("countryCustomField")){
+        $("countryCustomField").style.display = $("country").value === "其他 / 待定" ? "flex" : "none";
+      }
+      if($("originCustomField")){
+        $("originCustomField").style.display = $("origin").value === "其他 / 自定义" ? "flex" : "none";
+      }
+    }
+    function renderAll(){updateCustomFields();renderPreview();renderGuide();renderDrafts();}
+
+    function md(data=getData()){
+      const line = (k,v)=>`| ${k} | ${v && String(v).trim() ? String(v).trim().replace(/\n/g,"<br>") : "未填写"} |`;
+      const arr = a => Array.isArray(a) && a.length ? a.join("、") : "未选择";
+      return `# 《终焉勿忘我》公开企划角色卡\n\n## 一、基础资料\n\n| 项目 | 内容 |\n|---|---|\n${line("角色姓名", data.name)}\n${line("别名 / 称号", data.alias)}\n${line("投稿人", data.creator)}\n${line("公开程度", data.visibility)}\n${line("性别", data.gender)}\n${line("年龄", data.age)}\n${line("外貌年龄", data.apparentAge)}\n${line("种族", data.race)}\n${line("混血 / 特殊血统", data.bloodline)}\n${line("所属国家 / 地区", data.country)}\n${line("具体出身地", data.birthplace)}\n${line("出身阶层", data.origin)}\n${line("当前身份", data.currentIdentity)}\n\n## 二、能力与职业\n\n| 项目 | 内容 |\n|---|---|\n${line("职业", data.job)}\n${line("魔力等级", data.magicLevel)}\n${line("魔法属性 / 特殊适配", arr(data.elements))}\n${line("武器类型", data.weapon)}\n${line("武器补充", data.weaponCustom)}\n${line("战斗方式", data.battleStyle)}\n\n## 三、人物设定\n\n| 项目 | 内容 |\n|---|---|\n${line("外貌特征", data.appearance)}\n${line("性格关键词", data.personality)}\n${line("爱好 / 习惯", data.hobbies)}\n${line("厌恶 / 恐惧", data.fear)}\n${line("重要物品", data.item)}\n\n## 四、故事资料\n\n| 项目 | 内容 |\n|---|---|\n${line("角色过去", data.past)}\n${line("现在目标", data.goal)}\n${line("角色秘密", data.secret)}\n${line("与国家制度的关系", data.stateRelation)}\n${line("世界观核心关联", arr(data.worldLinks))}\n${line("人际关系", data.relationship)}\n\n## 五、投稿范围\n\n| 项目 | 内容 |\n|---|---|\n${line("可接受剧情方向", arr(data.plotAccepts))}\n${line("不接受剧情方向", data.plotReject)}\n${line("备注", data.notes)}\n`;
+    }
+    function download(filename, content, type="text/plain"){
+      const blob = new Blob([content], {type});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 500);
+    }
+    function filenameBase(){
+      return (getData().name || "终焉勿忘我角色卡").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,36) || "角色卡";
+    }
+    function saveDraft(){
+      const d = getData();
+      const key = d.name?.trim() || `未命名角色_${new Date().toLocaleString()}`;
+      const drafts = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      drafts[key] = d;
+      localStorage.setItem(storageKey, JSON.stringify(drafts));
+      toast("草稿已保存");
+      renderDrafts();
+    }
+    function renderDrafts(){
+      const box = $("draftList");
+      if(!box) return;
+      const drafts = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      const names = Object.keys(drafts).sort();
+      if(!names.length){box.innerHTML = '<p class="small">暂无草稿。</p>';return;}
+      box.innerHTML = names.map(n=>`
+        <div class="draft-item">
+          <div><strong>${escapeHtml(n)}</strong><br><span>${escapeHtml(drafts[n].country || "未选国家")}｜${escapeHtml(drafts[n].race || "未选种族")}</span></div>
+          <div class="btn-row" style="margin:0"><button type="button" class="btn" data-load="${escapeHtml(n)}">载入</button><button type="button" class="btn danger" data-del="${escapeHtml(n)}">删除</button></div>
+        </div>
+      `).join("");
+      box.querySelectorAll("[data-load]").forEach(btn=>btn.onclick=()=>{setData(drafts[btn.dataset.load]); toast("已载入草稿");});
+      box.querySelectorAll("[data-del]").forEach(btn=>btn.onclick=()=>{delete drafts[btn.dataset.del]; localStorage.setItem(storageKey, JSON.stringify(drafts)); renderDrafts(); toast("已删除草稿");});
+    }
+    function toast(text){
+      const t = $("toast"); t.textContent = text; t.classList.add("show");
+      clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn=>btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      btn.classList.add("active");
+      $("tab-"+btn.dataset.tab).classList.add("active");
+    }));
+    form.addEventListener("input", renderAll);
+    form.addEventListener("change", renderAll);
+    ["saveDraftBtn","saveDraftBtn2"].forEach(id=>$(id).onclick=saveDraft);
+    ["exportJsonBtn","exportJsonBtn2"].forEach(id=>$(id).onclick=()=>download(`${filenameBase()}.json`, JSON.stringify(getData(), null, 2), "application/json"));
+    $("importJsonBtn").onclick=()=>$("fileInput").click();
+    $("fileInput").onchange=(e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{ setData(JSON.parse(reader.result)); toast("JSON 已导入"); }
+        catch(err){ alert("JSON 解析失败，请检查文件格式。"); }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    };
+    ["showMdBtn","showMdBtn2"].forEach(id=>$(id).onclick=()=>{ $("mdOutput").textContent = md(); $("mdModal").classList.add("active"); });
+    $("closeMdBtn").onclick=()=>$("mdModal").classList.remove("active");
+    $("copyMdBtn").onclick=async()=>{ await navigator.clipboard.writeText($("mdOutput").textContent); toast("Markdown 已复制"); };
+    $("downloadMdBtn").onclick=()=>download(`${filenameBase()}.md`, md(), "text/markdown");
+    $("printBtn").onclick=()=>window.print();
+    $("resetBtn").onclick=()=>{ if(confirm("确定清空当前表单吗？")){ form.reset(); renderAll(); }};
+    $("mdModal").addEventListener("click", e=>{ if(e.target.id === "mdModal") $("mdModal").classList.remove("active"); });
+
+    initSelects();
+    renderAll();
+  </script>
+</body>
+</html>
